@@ -70,11 +70,3 @@ func azure functionapp publish claimpilot-func-app
 **2. Service Bus Failure Handling:** If a runtime failure occurs internally within the ML worker pipeline, the Function actively throws an exception forcing the execution to halt. Because the Function did not gracefully return, the lock provided by the Service Bus on the specific message is released, making it available again for a configurable retry attempt (set to limits of 3). After continuous processing failure, instead of silently dropping crucial healthcare claims, the payload is pushed securely to the DLQ where a manual human reviewer or a designated pipeline can interact with it without clogging normal throughput.
 
 **3. Architecting for 10,000 Claims/Day:** At 10,000 claims per day, our primary bottleneck becomes feature ingestion limits and simultaneous SQL connections. I would transition from Azure SQL Serverless to heavily provisioned **Cosmos DB** leveraging low-latency, scalable NoSQL ingestion. Furthermore, I would establish Event Hubs operating upstream from the Service Bus queue to act as a resilient batching telemetry buffer. 
-
-**4. Monthly Cost Sketch (1,000 Claims/Day):** 
-At 1,000 claims (approx. 30,000 per month) utilizing strict API patterns:
-* **Azure Functions** (1M free tier, < 1ms execution times): ~$0 
-* **Azure Service Bus Basic** (1M operations free limit): ~$0
-* **Storage** (< 1GB per month): ~$0.10
-* **Azure SQL Serverless** (0.5 vCore, minimal uptime ~5 hours/day due to auto-pause): ~$20 to $30 / month 
-* **Total Estimate:** ~$30 / month, predominantly constrained tightly by baseline relational database minimums.
